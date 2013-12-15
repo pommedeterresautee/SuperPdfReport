@@ -1,4 +1,4 @@
-
+package org.taj.superreportpdf
 
 /*
  * The MIT License (MIT)
@@ -23,8 +23,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
-package org.taj.superreportpdf
 
 
 import java.io.{FileOutputStream, File}
@@ -69,34 +67,38 @@ object main {
     case unknown(bad) :: tail => die("unknown argument " + bad + "\n" + usage)
   }
 
-  val argTests = List("--attachments", "C:\\Users\\MBenesty\\IdeaProjects\\SuperReportPdf\\test\\attachments",
-    "--original-pdf", "C:\\Users\\MBenesty\\IdeaProjects\\SuperReportPdf\\test\\test.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\IdeaProjects\\SuperReportPdf\\test\\result.pdf", "--verbose")
+  val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
+    "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test.pdf", "--save-as",
+    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose")
 
   def main(args: Array[String]) {
 
-    val listArgt = args.toList
+    val listArgt = argTests.toList
 
-    if(listArgt.length == 0) die(description, displayError = false)
+    if (listArgt.length == 0) die(description, displayError = false)
 
     parseArgs(listArgt, ArgParser)
 
-    List((attachmentFolder, "Attachment folder"), (originalPDF, "Original PDF"), (finalPDF, "Destination PDF")) filter (_._1.isEmpty) foreach {case (_, text) => die(s"$text is missing.\n$usage")}
+    List((attachmentFolder, "Attachment folder"), (originalPDF, "Original PDF"), (finalPDF, "Destination PDF")) filter (_._1.isEmpty) foreach {
+      case (_, text) => die(s"$text is missing.\n$usage")
+    }
 
-    List(attachmentFolder, originalPDF) filter(!_.get.exists()) foreach {
+    List(attachmentFolder, originalPDF) filter (!_.get.exists()) foreach {
       case Some(file) => die(s"This path doesn't exist:\n${file.getAbsolutePath}\n$usage")
       case None =>
     }
 
-    if(!attachmentFolder.get.isDirectory) die("Attachment folder should be a folder.\n" + usage)
+    if (!finalPDF.get.getParentFile.isDirectory) die("PDF destination folder doesn't exist.\n" + usage)
+
+    if (!attachmentFolder.get.isDirectory) die("Attachment folder should be a folder.\n" + usage)
 
     val listFiles = attachmentFolder.get.listFiles().toList
 
-    if(listFiles.size == 0) die(s"Folder ${attachmentFolder.get.getAbsolutePath} is empty.\n$usage")
+    if (listFiles.size == 0) die(s"Folder ${attachmentFolder.get.getAbsolutePath} is empty.\n$usage")
 
     if (finalPDF.get.exists()) {
       finalPDF.get.delete()
-      if(verbose) println(s"Existing file deleted:\n ${finalPDF.get.getAbsolutePath}")
+      if (verbose) println(s"Existing file deleted:\n ${finalPDF.get.getAbsolutePath}")
     }
 
     val result = searchText(originalPDF.get, listFiles)
@@ -104,7 +106,7 @@ object main {
       case (line, page, attachment) =>
         val x = line.getEndPoint.get(0)
         val y = line.getEndPoint.get(1)
-        if(verbose) println(s"Add attachment page $page:\nExpression searched=${attachment.getName}\nX=$x\nY=$y\n")
+        if (verbose) println(s"Add attachment page $page:\nExpression searched=${attachment.getName}\nX=$x\nY=$y\n")
         val rect = new Rectangle(x + 3, y, x + 10, y + 17)
         (page, rect, attachment, attachment.getName)
     }
@@ -130,7 +132,7 @@ object main {
     listener.getResult
   }
 
-  def addAttachments(src: File, result: File, list: Traversable[(Int, Rectangle, File, String)]) {
+  def addAttachments(src: File, result: File, list: List[(Int, Rectangle, File, String)]) {
     val readerOriginalDocument = new PdfReader(src.getAbsolutePath)
     val stamper = new PdfStamper(readerOriginalDocument, new FileOutputStream(result))
 
@@ -148,11 +150,11 @@ object main {
 
   def parseArgs(args: List[String], argsParser: PartialFunction[List[String], List[String]]): List[String] = args match {
     case Nil => Nil
-    case _ => if (argsParser isDefinedAt args) parseArgs(argsParser(args),argsParser) else args.head :: parseArgs(args.tail,argsParser)
+    case _ => if (argsParser isDefinedAt args) parseArgs(argsParser(args), argsParser) else args.head :: parseArgs(args.tail, argsParser)
   }
-  
-  def die(msg: String = usage, displayError:Boolean = true) = {
-    println(if(displayError)
+
+  def die(msg: String = usage, displayError: Boolean = true) = {
+    println(if (displayError)
       s"""
         |ERROR
         |=====
@@ -161,7 +163,7 @@ object main {
     else msg)
     sys.exit(1)
   }
-  
+
   class MyParser(val searched: List[File]) extends RenderListener {
     private val mListPositions = new ArrayBuffer[(LineSegment, Int, File)]
     private val mPageContent = new StringBuilder
@@ -177,22 +179,23 @@ object main {
       mPageContent.append(renderInfo.getText.toLowerCase)
       mListFileName
         .filter(fileName => mPageContent.toString().contains(fileName))
-        .zipWithIndex
-        .foreach {
-        case (file, index) =>
-          mListPositions += Tuple3(renderInfo.getDescentLine, mCurrentPage, searched(index))
+        .foreach {fileName =>
+        val f = searched.find(_.getName.toLowerCase == fileName).get
+          mListPositions += Tuple3(renderInfo.getDescentLine, mCurrentPage, f)
           mPageContent.clear() //avoid finding several time the same item
       }
     }
 
     //not used
     override def beginTextBlock(): Unit = {}
+
     //not used
     override def endTextBlock(): Unit = {}
+
     //not used
     override def renderImage(renderInfo: ImageRenderInfo): Unit = {}
-    
-    def getResult = mListPositions
+
+    def getResult = mListPositions.toList
 
     override def toString = mPageContent.toString()
   }
