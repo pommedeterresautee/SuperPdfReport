@@ -35,22 +35,26 @@ import scala.collection.mutable.ArrayBuffer
 
 
 object main {
-  val usage = """
-    Super PDF Report
-    ================
-    Super PDF Report helps you to create awesome PDF report including your attachments in a very easy way.
-    Put all your attachments in one folder.
-    Then, in your report insert the name of the attachment file where you want it to be available.
-    Start the command.
-    A little paperclip will appear next to the attachment name. You can click on it to open the attachment from the PDF.
-    Enjoy.
+  val usage =
+    """
+      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\file.pdf [--verbose] --save-as filename
+    """.stripMargin
+  val description = s"""
+    |Super PDF Report
+    |================
+    |Super PDF Report helps you to create awesome PDF report including your attachments in a very easy way.
+    |Put all your attachments in one folder.
+    |Then, in your report insert the name of the attachment file where you want it to be available.
+    |Start the command.
+    |A little paperclip will appear next to the attachment name. You can click on it to open the attachment from the PDF.
+    |Enjoy.
 
-    Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\file.pdf [--verbose] --save-as filename
+    $usage
 
-    #protip: Don't forget to let a little space after the name of the file in your document to let Super PDF Report insert a clickable link.
+    |#protip: Don't forget to let a little space after the name of the file in your document to let Super PDF Report insert a clickable link.
 
-    Super PDF Report has been written by the TMC Paris office of the lawfirm TAJ and is under MIT licence.
-              """
+    |Super PDF Report has been written by the TMC Paris office of the lawfirm TAJ and is under MIT licence.
+""".stripMargin
   val icon = "Paperclip"
   var verbose = false
   var attachmentFolder: Option[File] = None
@@ -71,12 +75,16 @@ object main {
 
   def main(args: Array[String]) {
 
-    parseArgs(argTests.toList, ArgParser)
+    val listArgt = args.toList
 
-    if(List(attachmentFolder, originalPDF, finalPDF) exists (_.isEmpty)) die("One or more argument is missing.\n" + usage)
+    if(listArgt.length == 0) die(description, displayError = false)
+
+    parseArgs(listArgt, ArgParser)
+
+    List((attachmentFolder, "Attachment folder"), (originalPDF, "Original PDF"), (finalPDF, "Destination PDF")) filter (_._1.isEmpty) foreach {case (_, text) => die(s"$text is missing.\n$usage")}
 
     List(attachmentFolder, originalPDF) filter(!_.get.exists()) foreach {
-      case Some(file) => die(s"This path doesn't exist: ${file.getAbsolutePath}\n$usage")
+      case Some(file) => die(s"This path doesn't exist:\n${file.getAbsolutePath}\n$usage")
       case None =>
     }
 
@@ -143,8 +151,14 @@ object main {
     case _ => if (argsParser isDefinedAt args) parseArgs(argsParser(args),argsParser) else args.head :: parseArgs(args.tail,argsParser)
   }
   
-  def die(msg: String = usage) = {
-    println(msg)
+  def die(msg: String = usage, displayError:Boolean = true) = {
+    println(if(displayError)
+      s"""
+        |ERROR
+        |=====
+        |$msg
+      """.stripMargin
+    else msg)
     sys.exit(1)
   }
   
