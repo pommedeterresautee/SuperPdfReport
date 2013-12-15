@@ -10,6 +10,8 @@ Enjoy.
 
 Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\file.pdf [--verbose] --save-as filename
 
-#protip: Don't forget to let a little space after the name of the file in your document to let Super PDF Report insert a clickable link.
+#protip: 
+
+Don't forget to let a little space after the name of the file in your document to let Super PDF Report insert a clickable link.
 
 Super PDF Report has been written by the TMC Paris office of the lawfirm TAJ and is under MIT licence.
