@@ -1,5 +1,3 @@
-package org.taj.superreportpdf
-
 /*
  * The MIT License (MIT)
  *
@@ -24,6 +22,7 @@ package org.taj.superreportpdf
  * THE SOFTWARE.
  */
 
+package org.taj.superreportpdf
 
 object main {
 

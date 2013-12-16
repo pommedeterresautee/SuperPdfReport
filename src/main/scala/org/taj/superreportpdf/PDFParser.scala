@@ -85,40 +85,4 @@ object PDFParser {
     }
     stamper.close()
   }
-
-  class MyParser(val searched: List[File]) extends RenderListener {
-    private val mListPositions = new ArrayBuffer[(LineSegment, Int, File)]
-    private val mPageContent = new StringBuilder
-    private val mListFileName = searched.map(_.getName.toLowerCase).toList
-    private var mCurrentPage = -1
-
-    def newPage(page: Int) = {
-      mPageContent.clear()
-      mCurrentPage = page
-    }
-
-    override def renderText(renderInfo: TextRenderInfo) {
-      mPageContent.append(renderInfo.getText.toLowerCase)
-      mListFileName
-        .filter(fileName => mPageContent.toString().contains(fileName))
-        .foreach {fileName =>
-        val f = searched.find(_.getName.toLowerCase == fileName).get
-        mListPositions += Tuple3(renderInfo.getDescentLine, mCurrentPage, f)
-        mPageContent.clear() //avoid finding several time the same item
-      }
-    }
-
-    //not used
-    override def beginTextBlock(): Unit = {}
-
-    //not used
-    override def endTextBlock(): Unit = {}
-
-    //not used
-    override def renderImage(renderInfo: ImageRenderInfo): Unit = {}
-
-    def getResult = mListPositions.toList
-
-    override def toString = mPageContent.toString()
-  }
 }
