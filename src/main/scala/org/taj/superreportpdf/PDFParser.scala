@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package scala.org.taj.superreportpdf
+package org.taj.superreportpdf
 
 import java.io.{FileOutputStream, File}
 import com.itextpdf.text.pdf._

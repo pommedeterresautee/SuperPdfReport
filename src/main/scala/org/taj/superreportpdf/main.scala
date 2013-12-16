@@ -25,14 +25,6 @@ package org.taj.superreportpdf
  */
 
 
-import java.io.{FileOutputStream, File}
-import com.itextpdf.text.pdf._
-import com.itextpdf.text.Rectangle
-import com.itextpdf.text.pdf.parser._
-import scala.collection.mutable.ArrayBuffer
-import scala.org.taj.superreportpdf.PDFParser
-
-
 object main {
 
   val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
@@ -42,10 +34,8 @@ object main {
   def main(args: Array[String]) {
 
     val listArgt = argTests.toList
-
     val parser = ArgtParser(listArgt)
 
-    parser.apply()
 
     if (parser.finalPDF.get.exists()) {
       parser.finalPDF.get.delete()
@@ -54,6 +44,4 @@ object main {
 
     PDFParser.process(parser)
   }
-
-
 }

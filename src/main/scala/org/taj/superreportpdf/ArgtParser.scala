@@ -26,7 +26,7 @@ package org.taj.superreportpdf
 
 import java.io.File
 
-case class ArgtParser(listArgt:List[String]) {
+class ArgtParser {
 
   val usage =
     """
@@ -66,7 +66,7 @@ case class ArgtParser(listArgt:List[String]) {
 
   val unknown = "(^-[^\\s])".r
 
-  def apply() {
+  def get(listArgt:List[String]) {
 
     if (listArgt.length == 0) die(description, displayError = false)
 
@@ -107,5 +107,12 @@ case class ArgtParser(listArgt:List[String]) {
     else msg)
     sys.exit(1)
   }
+}
 
+object ArgtParser {
+  def apply(listArgt:List[String])= {
+    val t = new ArgtParser()
+    t.get(listArgt)
+    t
+  }
 }
