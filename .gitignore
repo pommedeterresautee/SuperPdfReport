@@ -155,9 +155,7 @@ $RECYCLE.BIN/
 
 #scala
 /test
-target/.history
-target/resolution-cache
-target/streams
+target
 project/target/
 project/project/
 
