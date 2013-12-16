@@ -35,7 +35,7 @@ import scala.collection.mutable.ArrayBuffer
 object main {
   val usage =
     """
-      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\file.pdf [--verbose] --save-as filename
+      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\original.pdf [--verbose] [--description anyText] --save-as C:\path\destination.pdf
     """.stripMargin
   val description = s"""
     |Super PDF Report
@@ -53,14 +53,16 @@ object main {
 
     |Super PDF Report has been written by the TMC Paris office of the lawfirm TAJ and is under MIT licence.
 """.stripMargin
-  val icon = "PushPin"
+  val icon = "Paperclip"
   var verbose = false
   var attachmentFolder: Option[File] = None
   var originalPDF: Option[File] = None
   var finalPDF: Option[File] = None
+  var descriptionPDF: Option[String] = None
   val unknown = "(^-[^\\s])".r
   val ArgParser: PartialFunction[List[String], List[String]] = {
     case "--verbose" :: tail => verbose = true; tail
+    case "--description" :: (arg: String) :: tail => descriptionPDF = Option(arg); tail
     case "--attachments" :: (arg: String) :: tail => attachmentFolder = Option(new File(arg)); tail
     case "--original-pdf" :: (arg: String) :: tail => originalPDF = Option(new File(arg)); tail
     case "--save-as" :: (arg: String) :: tail => finalPDF = Option(new File(arg)); tail
@@ -69,7 +71,7 @@ object main {
 
   val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
     "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose")
+    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard")
 
   def main(args: Array[String]) {
 
@@ -108,7 +110,7 @@ object main {
         val y = line.getEndPoint.get(1)
         if (verbose) println(s"Add attachment page $page:\nExpression searched=${attachment.getName}\nX=$x\nY=$y\n")
         val rect = new Rectangle(x + 3, y, x + 10, y + 17)
-        (page, rect, attachment, attachment.getName)
+        (page, rect, attachment, descriptionPDF.getOrElse(attachment.getName))
     }
     addAttachments(originalPDF.get, finalPDF.get, result)
   }
