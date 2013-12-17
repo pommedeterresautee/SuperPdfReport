@@ -28,14 +28,9 @@ import java.io.{FileOutputStream, File}
 import com.itextpdf.text.pdf._
 import com.itextpdf.text.pdf.parser._
 import com.itextpdf.text.Rectangle
-import scala.Tuple3
-import scala.collection.mutable.ArrayBuffer
-import scala.Tuple3
-import scala.Tuple3
-import org.taj.superreportpdf.ArgtParser
 
 
-object PDFParser {
+object PaperclipAttacher {
   val icon = "Paperclip"
 
   def process(parser:ArgtParser) {
@@ -51,12 +46,7 @@ object PDFParser {
     addAttachments(parser.originalPDF.get, parser.finalPDF.get, result)
   }
 
-  def readPDFProperties(src: File) = {
-    val reader = new PdfReader(src.getAbsolutePath)
-    println(reader.getNumberOfPages)
-  }
-
-  def searchText(src: File, listFile: List[File]) = {
+  private def searchText(src: File, listFile: List[File]) = {
     val reader = new PdfReader(src.getAbsolutePath)
     val listener = new MyParser(listFile)
     val processor = new PdfContentStreamProcessor(listener)
@@ -70,7 +60,7 @@ object PDFParser {
     listener.getResult
   }
 
-  def addAttachments(src: File, result: File, list: List[(Int, Rectangle, File, String)]) {
+  private def addAttachments(src: File, result: File, list: List[(Int, Rectangle, File, String)]) {
     val readerOriginalDocument = new PdfReader(src.getAbsolutePath)
     val stamper = new PdfStamper(readerOriginalDocument, new FileOutputStream(result))
 

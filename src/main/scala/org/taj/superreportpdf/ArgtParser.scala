@@ -26,11 +26,16 @@ package org.taj.superreportpdf
 
 import java.io.File
 
+object AttachmentMode extends Enumeration {
+  type Mode = Value
+  val paperclip, portfolio = Value
+}
+
 class ArgtParser {
 
   val usage =
-    """
-      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\original.pdf [--verbose] [--description anyText] --save-as C:\path\destination.pdf
+  """
+      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\original.pdf [--verbose] [--description anyText] [--paperclip-attachment] [--portfolio] --save-as C:\path\destination.pdf
     """.stripMargin
   val description = s"""
     |Super PDF Report
@@ -46,7 +51,7 @@ class ArgtParser {
 
     |#protip: Don't forget to let a little space after the name of the file in your document to let Super PDF Report insert a clickable link.
 
-    |Super PDF Report has been written by the TMC Paris office of the lawfirm TAJ and is under MIT licence.
+    |Super PDF Report has been written by the TMC Paris office of the law firm TAJ and is under MIT licence.
 """.stripMargin
 
   var verbose = false
@@ -54,9 +59,12 @@ class ArgtParser {
   var originalPDF: Option[File] = None
   var finalPDF: Option[File] = None
   var descriptionPDF: Option[String] = None
+  var attachmentMode: Option[AttachmentMode.Mode]= Option(AttachmentMode.paperclip)
 
   val ArgParser: PartialFunction[List[String], List[String]] = {
     case "--verbose" :: tail => verbose = true; tail
+    case "--paperclip-attachment" :: tail => attachmentMode = Option(AttachmentMode.paperclip); tail
+    case "--portfolio" :: tail => attachmentMode = Option(AttachmentMode.portfolio); tail
     case "--description" :: (arg: String) :: tail => descriptionPDF = Option(arg); tail
     case "--attachments" :: (arg: String) :: tail => attachmentFolder = Option(new File(arg)); tail
     case "--original-pdf" :: (arg: String) :: tail => originalPDF = Option(new File(arg)); tail

@@ -28,19 +28,21 @@ object main {
 
   val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
     "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard")
+    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--paperclip-attachment")
 
   def main(args: Array[String]) {
 
     val listArgt = argTests.toList
     val parser = ArgtParser(listArgt)
 
-
     if (parser.finalPDF.get.exists()) {
       parser.finalPDF.get.delete()
       if (parser.verbose) println(s"Existing file deleted:\n ${parser.finalPDF.get.getAbsolutePath}")
     }
 
-    PDFParser.process(parser)
+    parser.attachmentMode match {
+      case Some(AttachmentMode.paperclip) => PaperclipAttacher.process(parser)
+      case Some(AttachmentMode.portfolio) => println("To implement")
+    }
   }
 }
