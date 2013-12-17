@@ -34,14 +34,17 @@ object PortfolioAttachment {
   def process(parser:ArgtParser) {
     val reader = new PdfReader(parser.originalPDF.get.getAbsolutePath)
     val stamper = new PdfStamper(reader, new FileOutputStream(parser.finalPDF.get))
-    parser.attachmentFolder.get.listFiles()
-      .toList
-    .foreach(addAttachment(stamper, _, parser.descriptionPDF.get))
-
+    if(parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
+      parser
+        .attachmentFolder
+        .get
+        .listFiles()
+        .toList
+        .foreach(addAttachment(stamper, _, parser.descriptionPDF.get, parser.verbose))
     stamper.close()
   }
 
-  def addAttachment(stamper:PdfStamper, fileToAttach:File, description:String) {
+  def addAttachment(stamper:PdfStamper, fileToAttach:File, description:String, verbose:Boolean) {
     val pdfDictionary = new PdfDictionary()
     val c = Calendar.getInstance()
     c.setTimeInMillis(fileToAttach.lastModified())
@@ -49,5 +52,6 @@ object PortfolioAttachment {
     val pdfWriter = stamper.getWriter
     val fs = PdfFileSpecification.fileEmbedded(pdfWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null, pdfDictionary)
     stamper.addFileAttachment(description, fs)
+    if(verbose) println(s"Attached: ${fileToAttach.getAbsolutePath}")
   }
 }
