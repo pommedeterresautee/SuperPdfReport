@@ -30,7 +30,7 @@ import com.itextpdf.text.pdf.parser._
 import com.itextpdf.text.Rectangle
 
 
-object PaperclipAttacher {
+object PaperclipAttachment {
   val icon = "Paperclip"
 
   def process(parser:ArgtParser) {

@@ -24,25 +24,30 @@
 
 package org.taj.superreportpdf
 
-object main {
+import com.itextpdf.text.pdf._
+import java.io.{File, FileOutputStream}
+import java.util.Calendar
 
-  val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
-    "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--portfolio")
 
-  def main(args: Array[String]) {
+object PortfolioAttachment {
 
-    val listArgt = argTests.toList
-    val parser = ArgtParser(listArgt)
+  def process(parser:ArgtParser) {
+    val reader = new PdfReader(parser.originalPDF.get.getAbsolutePath)
+    val stamper = new PdfStamper(reader, new FileOutputStream(parser.finalPDF.get))
+    parser.attachmentFolder.get.listFiles()
+      .toList
+    .foreach(addAttachment(stamper, _, parser.descriptionPDF.get))
 
-    if (parser.finalPDF.get.exists()) {
-      parser.finalPDF.get.delete()
-      if (parser.verbose) println(s"Existing file deleted:\n ${parser.finalPDF.get.getAbsolutePath}")
-    }
+    stamper.close()
+  }
 
-    parser.attachmentMode match {
-      case Some(AttachmentMode.paperclip) => PaperclipAttachment.process(parser)
-      case Some(AttachmentMode.portfolio) => PortfolioAttachment.process(parser)
-    }
+  def addAttachment(stamper:PdfStamper, fileToAttach:File, description:String) {
+    val pdfDictionary = new PdfDictionary()
+    val c = Calendar.getInstance()
+    c.setTimeInMillis(fileToAttach.lastModified())
+    pdfDictionary.put(PdfName.MODDATE, new PdfDate(c))
+    val pdfWriter = stamper.getWriter
+    val fs = PdfFileSpecification.fileEmbedded(pdfWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null, pdfDictionary)
+    stamper.addFileAttachment(description, fs)
   }
 }
