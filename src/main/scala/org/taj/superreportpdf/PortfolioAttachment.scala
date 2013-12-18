@@ -27,6 +27,8 @@ package org.taj.superreportpdf
 import com.itextpdf.text.pdf._
 import java.io.{File, FileOutputStream}
 import java.util.Calendar
+import java.nio.file.attribute.{FileTime, BasicFileAttributes}
+import java.nio.file.Files
 
 
 object PortfolioAttachment {
@@ -46,11 +48,16 @@ object PortfolioAttachment {
 
   def addAttachment(stamper:PdfStamper, fileToAttach:File, description:String, verbose:Boolean) {
     val pdfDictionary = new PdfDictionary()
-    val c = Calendar.getInstance()
-    c.setTimeInMillis(fileToAttach.lastModified())
-    pdfDictionary.put(PdfName.MODDATE, new PdfDate(c))
-    val pdfWriter = stamper.getWriter
-    val fs = PdfFileSpecification.fileEmbedded(pdfWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null, pdfDictionary)
+    val lastModifDate = Calendar.getInstance()
+    val attributes:BasicFileAttributes  =
+      Files.readAttributes(fileToAttach.toPath, classOf[BasicFileAttributes])
+    lastModifDate.setTimeInMillis(fileToAttach.lastModified())
+    val creationDate = Calendar.getInstance()
+    creationDate.setTimeInMillis(attributes.creationTime().toMillis)
+    pdfDictionary.put(PdfName.NAME, new PdfString(fileToAttach.getName))
+    pdfDictionary.put(PdfName.CREATIONDATE, new PdfDate(creationDate))
+    pdfDictionary.put(PdfName.MODDATE, new PdfDate(lastModifDate))
+    val fs = PdfFileSpecification.fileEmbedded(stamper.getWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null, pdfDictionary)
     stamper.addFileAttachment(description, fs)
     if(verbose) println(s"Attached: ${fileToAttach.getAbsolutePath}")
   }
