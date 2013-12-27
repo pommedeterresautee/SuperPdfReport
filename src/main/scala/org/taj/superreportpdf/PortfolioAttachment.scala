@@ -37,12 +37,12 @@ object PortfolioAttachment {
     val reader = new PdfReader(parser.originalPDF.get.getAbsolutePath)
     val stamper = new PdfStamper(reader, new FileOutputStream(parser.finalPDF.get))
     if(parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
-      parser
-        .attachmentFolder
-        .get
-        .listFiles()
-        .toList
-        .foreach(addAttachment(stamper, _, parser.descriptionPDF.get, parser.verbose))
+    parser
+      .attachmentFolder
+      .get
+      .listFiles
+      .toList
+      .foreach(addAttachment(stamper, _, parser.descriptionPDF.get, parser.verbose))
     stamper.close()
   }
 

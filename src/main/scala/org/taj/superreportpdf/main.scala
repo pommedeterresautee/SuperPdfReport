@@ -26,13 +26,13 @@ package org.taj.superreportpdf
 
 object main {
 
-  val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
+  val argTestsWindows = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
     "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
     "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--paperclip-attachment", "--set-icon-attachment", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\paperclip.jpg")
 
   def main(args: Array[String]) {
 
-    val listArgt = argTests.toList
+    val listArgt = argTestsWindows.toList
     val parser = ArgtParser(listArgt)
 
     if (parser.finalPDF.get.exists()) {
