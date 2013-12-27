@@ -154,7 +154,6 @@ $RECYCLE.BIN/
 .DS_Store
 
 #scala
-/test
 target
 project/target/
 project/project/
