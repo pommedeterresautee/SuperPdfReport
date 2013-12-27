@@ -35,7 +35,7 @@ class ArgtParser {
 
   val usage =
   """
-      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\original.pdf [--verbose] [--description anyText] [--paperclip-attachment] [--portfolio] --save-as C:\path\destination.pdf
+      |Usage: superpdfreport --attachments C:\path\folder\ --original-pdf C:\path\original.pdf [--verbose] [--description anyText] [--paperclip-attachment] [--portfolio] [--set-icon-attachment C:\path\original.EXT] --save-as C:\path\destination.pdf
     """.stripMargin
   val description = s"""
     |Super PDF Report
@@ -59,6 +59,7 @@ class ArgtParser {
   var originalPDF: Option[File] = None
   var finalPDF: Option[File] = None
   var descriptionPDF: Option[String] = None
+  var attachmentIcon: Option[File] = None
   var attachmentMode: Option[AttachmentMode.Mode]= Option(AttachmentMode.paperclip)
 
   val ArgParser: PartialFunction[List[String], List[String]] = {
@@ -69,6 +70,7 @@ class ArgtParser {
     case "--attachments" :: (arg: String) :: tail => attachmentFolder = Option(new File(arg)); tail
     case "--original-pdf" :: (arg: String) :: tail => originalPDF = Option(new File(arg)); tail
     case "--save-as" :: (arg: String) :: tail => finalPDF = Option(new File(arg)); tail
+    case "--set-icon-attachment" :: (arg: String)  :: tail => attachmentIcon = Option(new File(arg)); tail
     case unknown(bad) :: tail => die("unknown argument " + bad + "\n" + usage)
   }
 

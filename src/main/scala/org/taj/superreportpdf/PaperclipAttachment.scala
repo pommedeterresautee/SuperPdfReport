@@ -27,7 +27,8 @@ package org.taj.superreportpdf
 import java.io.{FileOutputStream, File}
 import com.itextpdf.text.pdf._
 import com.itextpdf.text.pdf.parser._
-import com.itextpdf.text.Rectangle
+import com.itextpdf.text._
+import scala.List
 
 
 object PaperclipAttachment {
@@ -43,7 +44,7 @@ object PaperclipAttachment {
         val rect = new Rectangle(x + 3, y, x + 10, y + 17)
         (page, rect, attachment, parser.descriptionPDF.getOrElse(attachment.getName))
     }
-    addAttachments(parser.originalPDF.get, parser.finalPDF.get, result)
+    addAttachments(parser.originalPDF.get, parser.finalPDF.get, result, parser.attachmentIcon)
   }
 
   private def searchText(src: File, listFile: List[File]) = {
@@ -60,7 +61,7 @@ object PaperclipAttachment {
     listener.getResult
   }
 
-  private def addAttachments(src: File, result: File, list: List[(Int, Rectangle, File, String)]) {
+  private def addAttachments(src: File, result: File, list: List[(Int, Rectangle, File, String)], customIcon:Option[File]) {
     val readerOriginalDocument = new PdfReader(src.getAbsolutePath)
     val stamper = new PdfStamper(readerOriginalDocument, new FileOutputStream(result))
 
@@ -68,6 +69,20 @@ object PaperclipAttachment {
       case (page: Int, rec: Rectangle, fileToAttach: File, description: String) =>
         val annotation = PdfAnnotation.createFileAttachment(stamper.getWriter, rec, description, null, fileToAttach.getAbsolutePath, fileToAttach.getName)
         annotation.put(PdfName.NAME, new PdfString(icon))
+        customIcon.foreach{f =>
+          val image = Image.getInstance(f.getAbsolutePath)
+          val app = stamper.getOverContent(page).createAppearance(image.getWidth, image.getHeight)
+          annotation.setAppearance(PdfAnnotation.APPEARANCE_NORMAL, app)
+          annotation.setAppearance(PdfAnnotation.APPEARANCE_DOWN, app)
+          annotation.setAppearance(PdfAnnotation.APPEARANCE_ROLLOVER, app)
+          val chunk = new Chunk(image,50,50)
+          chunk.setAnnotation(annotation)
+          val phrase = new Phrase(chunk)
+          val cell = new PdfPCell(phrase)
+          cell.setHorizontalAlignment(Element.ALIGN_CENTER)
+          cell.setVerticalAlignment(Element.ALIGN_CENTER)
+        }
+        
         (page, annotation)
     }
       .foreach {

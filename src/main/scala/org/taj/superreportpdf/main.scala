@@ -28,7 +28,7 @@ object main {
 
   val argTests = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
     "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--portfolio")
+    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--paperclip-attachment", "--set-icon-attachment", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\paperclip.jpg")
 
   def main(args: Array[String]) {
 
