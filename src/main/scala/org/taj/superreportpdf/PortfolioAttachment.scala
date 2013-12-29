@@ -27,29 +27,36 @@ package org.taj.superreportpdf
 import com.itextpdf.text.pdf._
 import java.io.{File, FileOutputStream}
 import java.util.Calendar
-import java.nio.file.attribute.{FileTime, BasicFileAttributes}
+import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.Files
 
 
 object PortfolioAttachment {
 
-  def process(parser:ArgtParser) {
+  def process(parser: ArgtParser) {
     val reader = new PdfReader(parser.originalPDF.get.getAbsolutePath)
     val stamper = new PdfStamper(reader, new FileOutputStream(parser.finalPDF.get))
-    if(parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
+    if (parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
     parser
       .attachmentFolder
       .get
       .listFiles
       .toList
-      .foreach(addAttachment(stamper, _, parser.descriptionPDF.get, parser.verbose))
-    stamper.close()
+      .foreach {
+      fileToAttach: File =>
+        val fs = PdfFileSpecification.fileEmbedded(stamper.getWriter,
+          fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null,
+          getMetadata(fileToAttach))
+        stamper.addFileAttachment(parser.descriptionPDF.get, fs)
+        if (parser.verbose) println(s"Attached: ${fileToAttach.getAbsolutePath}")
+        stamper.close()
+    }
   }
 
-  def addAttachment(stamper:PdfStamper, fileToAttach:File, description:String, verbose:Boolean) {
+  def getMetadata(fileToAttach: File): PdfDictionary = {
     val pdfDictionary = new PdfDictionary()
     val lastModifDate = Calendar.getInstance()
-    val attributes:BasicFileAttributes  =
+    val attributes: BasicFileAttributes =
       Files.readAttributes(fileToAttach.toPath, classOf[BasicFileAttributes])
     lastModifDate.setTimeInMillis(fileToAttach.lastModified())
     val creationDate = Calendar.getInstance()
@@ -57,8 +64,6 @@ object PortfolioAttachment {
     pdfDictionary.put(PdfName.NAME, new PdfString(fileToAttach.getName))
     pdfDictionary.put(PdfName.CREATIONDATE, new PdfDate(creationDate))
     pdfDictionary.put(PdfName.MODDATE, new PdfDate(lastModifDate))
-    val fs = PdfFileSpecification.fileEmbedded(stamper.getWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null, pdfDictionary)
-    stamper.addFileAttachment(description, fs)
-    if(verbose) println(s"Attached: ${fileToAttach.getAbsolutePath}")
+    pdfDictionary
   }
 }
