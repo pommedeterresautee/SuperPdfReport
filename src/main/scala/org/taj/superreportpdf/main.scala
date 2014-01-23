@@ -28,7 +28,8 @@ object main {
 
   val argTestsWindows = List("--attachments", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\attachments",
     "--original-pdf", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\test4.pdf", "--save-as",
-    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--paperclip-attachment", "--set-icon-attachment", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\paperclip.jpg")
+    "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\result.pdf", "--verbose", "--description", "une description un peu au hasard", "--portfolio")
+  //, "--set-icon-attachment", "C:\\Users\\MBenesty\\Private\\GIT\\SuperPdfReport\\test\\paperclip.jpg")
 
   def main(args: Array[String]) {
 
@@ -40,9 +41,12 @@ object main {
       if (parser.verbose) println(s"Existing file deleted:\n ${parser.finalPDF.get.getAbsolutePath}")
     }
 
+    PortfolioTemp.main()
+
     parser.attachmentMode match {
       case Some(AttachmentMode.paperclip) => PaperclipAttachment.process(parser)
       case Some(AttachmentMode.portfolio) => PortfolioAttachment.process(parser)
+      case _ =>
     }
   }
 }
