@@ -30,9 +30,7 @@ import com.itextpdf.text.pdf._
 import com.itextpdf.text.pdf.collection._
 import java.io.{File, ByteArrayOutputStream, FileOutputStream}
 
-case class Attachment(fileToAttach: File, description: String)
-
-object PortfolioTemp {
+object PortfolioAttachment {
   private val DESCRIPTION = "Description"
   private val DESCRIPTION_FIELD = "DESCRIPTION"
   private val FILENAME = "File name"
@@ -48,20 +46,23 @@ object PortfolioTemp {
       (DESCRIPTION_FIELD, DESCRIPTION, PdfCollectionField.TEXT),
       (SIZE_FIELD, SIZE, PdfCollectionField.SIZE),
       (DATE_FIELD, DATE, PdfCollectionField.MODDATE)
-    ).foreach {
-      case (columnName: String, columnDisplayedName: String, varType: Int) =>
-        schema.addField(columnName, new PdfCollectionField(columnDisplayedName, varType))
+    ).zipWithIndex
+      .foreach {
+      case ((columnName: String, columnDisplayedName: String, varType: Int), index: Int) =>
+        val p = new PdfCollectionField(columnDisplayedName, varType)
+        p.setOrder(index)
+        schema.addField(columnName, p)
     }
     schema
   }
 
-  private def getMetadata(schema: PdfCollectionSchema, fileToAttach: File, description: String): PdfCollectionItem = {
+  private def getDocumentMetadata(schema: PdfCollectionSchema, fileToAttach: File, description: String): PdfCollectionItem = {
     val item: PdfCollectionItem = new PdfCollectionItem(schema)
     item.addItem(DESCRIPTION_FIELD, description)
     item
   }
 
-  private def createPdf(toAttach: Seq[Attachment], coverPageContentText: String, verbose: Boolean): Array[Byte] = {
+  private def createPdf(toAttach: Seq[(File, String)], coverPageContentText: String, verbose: Boolean): Array[Byte] = {
     val document: Document = new Document
 
     val finalDocumentBytes: ByteArrayOutputStream = new ByteArrayOutputStream
@@ -79,10 +80,11 @@ object PortfolioTemp {
 
     toAttach.foreach {
       attachments =>
-        val fs: PdfFileSpecification = PdfFileSpecification.fileEmbedded(writer, attachments.fileToAttach.getAbsolutePath, attachments.fileToAttach.getName, null)
-        fs.addCollectionItem(getMetadata(schema, attachments.fileToAttach, attachments.description))
+        val fs: PdfFileSpecification = PdfFileSpecification.fileEmbedded(writer, attachments._1.getAbsolutePath, attachments._1.getName, null)
+
+        fs.addCollectionItem(getDocumentMetadata(schema, attachments._1, attachments._2))
         writer.addFileAttachment(fs)
-        if (verbose) println(s"Attached ${attachments.fileToAttach.getAbsolutePath}")
+        if (verbose) println(s"Attached ${attachments._1.getAbsolutePath}")
     }
     document.close()
     finalDocumentBytes.toByteArray
@@ -95,7 +97,7 @@ object PortfolioTemp {
       .attachmentFolder
       .get
       .listFiles
-      .map(Attachment(_, "Some description here"))
+      .map((_, "Some description here"))
 
     val output = parser.finalPDF.get
     val os = new FileOutputStream(output)

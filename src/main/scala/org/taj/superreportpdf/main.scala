@@ -45,7 +45,7 @@ object main {
 
     parser.attachmentMode match {
       case Some(AttachmentMode.paperclip) => PaperclipAttachment.process(parser)
-      case Some(AttachmentMode.portfolio) => PortfolioTemp.process(parser)
+      case Some(AttachmentMode.portfolio) => PortfolioAttachment.process(parser)
       case _ =>
     }
   }
