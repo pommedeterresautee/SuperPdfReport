@@ -41,11 +41,11 @@ object main {
       if (parser.verbose) println(s"Existing file deleted:\n ${parser.finalPDF.get.getAbsolutePath}")
     }
 
-    PortfolioTemp.main()
+    //    PortfolioTemp.main()
 
     parser.attachmentMode match {
       case Some(AttachmentMode.paperclip) => PaperclipAttachment.process(parser)
-      case Some(AttachmentMode.portfolio) => PortfolioAttachment.process(parser)
+      case Some(AttachmentMode.portfolio) => PortfolioTemp.process(parser)
       case _ =>
     }
   }

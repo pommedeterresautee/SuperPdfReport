@@ -24,85 +24,83 @@
 
 package org.taj.superreportpdf
 
+import com.itextpdf.text.Document
+import com.itextpdf.text.Paragraph
 import com.itextpdf.text.pdf._
-import java.io.{File, FileOutputStream}
-import java.util.Calendar
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.Files
 import com.itextpdf.text.pdf.collection._
+import java.io.{File, ByteArrayOutputStream, FileOutputStream}
 
+case class Attachment(fileToAttach: File, description: String)
 
-object PortfolioAttachment {
-  private val TITLE = "Title"
-  private val TITLE_FIELD = "TITLE"
+object PortfolioTemp {
+  private val DESCRIPTION = "Description"
+  private val DESCRIPTION_FIELD = "DESCRIPTION"
   private val FILENAME = "File name"
   private val FILENAME_FIELD = "FILENAME"
-  //  private val COLUMNS = Array(TITLE_FIELD/*, FILENAME_FIELD*/)
-
-  def process(parser: ArgtParser) {
-    val reader = new PdfReader(parser.originalPDF.get.getAbsolutePath)
-    val stamper = new PdfStamper(reader, new FileOutputStream(parser.finalPDF.get))
-    if (parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
-
-    val collection = new PdfCollection(PdfCollection.DETAILS)
-    val schema = getCollectionSchema
-    collection.setSchema(schema)
-    val sort = new PdfCollectionSort(TITLE_FIELD)
-    sort.setSortOrder(false)
-    collection.setSort(sort)
-    collection.setInitialDocument("Fichier.pdf")
-    stamper.getWriter.setCollection(collection)
-
-    parser
-      .attachmentFolder
-      .get
-      .listFiles
-      .toList
-      .foreach {
-      fileToAttach: File =>
-        val fs = PdfFileSpecification.fileEmbedded(stamper.getWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null)
-        stamper.addFileAttachment("test", fs)
-
-        //        val collectionItem = new PdfCollectionItem(schema)
-        //        val fileSpec = PdfFileSpecification.fileEmbedded(stamper.getWriter, fileToAttach.getAbsolutePath, fileToAttach.getName, null)
-        //        fileSpec.addDescription("Here comes the description", false)
-        //        collectionItem.addItem(TITLE_FIELD, fileToAttach.getName)
-        ////        collectionItem.addItem(FILENAME_FIELD, fileToAttach.getName)
-        //        fileSpec.addCollectionItem(collectionItem)
-        //        stamper.getWriter.addFileAttachment(fileSpec)
-
-        //        val fs = PdfFileSpecification.fileEmbedded(stamper.getWriter,
-        //          fileToAttach.getAbsolutePath, fileToAttach.getName, null, true, null,
-        //          getMetadata(fileToAttach))
-        //        stamper.addFileAttachment(parser.descriptionPDF.get, fs)
-        if (parser.verbose) println(s"Attached: ${fileToAttach.getAbsolutePath}")
-    }
-    stamper.close()
-  }
-
-  private def getMetadata(fileToAttach: File): PdfDictionary = {
-    val pdfDictionary = new PdfDictionary()
-    val lastModifDate = Calendar.getInstance()
-    val attributes: BasicFileAttributes =
-      Files.readAttributes(fileToAttach.toPath, classOf[BasicFileAttributes])
-    lastModifDate.setTimeInMillis(fileToAttach.lastModified())
-    val creationDate = Calendar.getInstance()
-    creationDate.setTimeInMillis(attributes.creationTime().toMillis)
-    pdfDictionary.put(PdfName.NAME, new PdfString(fileToAttach.getName))
-    pdfDictionary.put(PdfName.CREATIONDATE, new PdfDate(creationDate))
-    pdfDictionary.put(PdfName.MODDATE, new PdfDate(lastModifDate))
-    pdfDictionary
-  }
+  private val DATE = "Last file update"
+  private val DATE_FIELD = "DATE"
+  private val SIZE = "Size"
+  private val SIZE_FIELD = "SIZE"
 
   private def getCollectionSchema: PdfCollectionSchema = {
     val schema = new PdfCollectionSchema()
-    val title = new PdfCollectionField(TITLE, PdfCollectionField.TEXT)
-    title.setOrder(0)
-    title.setVisible(true)
-    schema.addField(TITLE_FIELD, title)
-    val filename = new PdfCollectionField(FILENAME, PdfCollectionField.FILENAME)
-    filename.setOrder(1)
-    schema.addField(FILENAME_FIELD, filename)
+    Seq((FILENAME_FIELD, FILENAME, PdfCollectionField.FILENAME),
+      (DESCRIPTION_FIELD, DESCRIPTION, PdfCollectionField.TEXT),
+      (SIZE_FIELD, SIZE, PdfCollectionField.SIZE),
+      (DATE_FIELD, DATE, PdfCollectionField.MODDATE)
+    ).foreach {
+      case (columnName: String, columnDisplayedName: String, varType: Int) =>
+        schema.addField(columnName, new PdfCollectionField(columnDisplayedName, varType))
+    }
     schema
+  }
+
+  private def getMetadata(schema: PdfCollectionSchema, fileToAttach: File, description: String): PdfCollectionItem = {
+    val item: PdfCollectionItem = new PdfCollectionItem(schema)
+    item.addItem(DESCRIPTION_FIELD, description)
+    item
+  }
+
+  private def createPdf(toAttach: Seq[Attachment], coverPageContentText: String, verbose: Boolean): Array[Byte] = {
+    val document: Document = new Document
+
+    val finalDocumentBytes: ByteArrayOutputStream = new ByteArrayOutputStream
+    val writer: PdfWriter = PdfWriter.getInstance(document, finalDocumentBytes)
+
+    document.open()
+    document.add(new Paragraph(coverPageContentText))
+    val schema: PdfCollectionSchema = getCollectionSchema
+    val collection: PdfCollection = new PdfCollection(PdfCollection.DETAILS)
+    collection.setSchema(schema)
+    val sort: PdfCollectionSort = new PdfCollectionSort(DATE_FIELD)
+    sort.setSortOrder(true)
+    collection.setSort(sort)
+    writer.setCollection(collection)
+
+    toAttach.foreach {
+      attachments =>
+        val fs: PdfFileSpecification = PdfFileSpecification.fileEmbedded(writer, attachments.fileToAttach.getAbsolutePath, attachments.fileToAttach.getName, null)
+        fs.addCollectionItem(getMetadata(schema, attachments.fileToAttach, attachments.description))
+        writer.addFileAttachment(fs)
+        if (verbose) println(s"Attached ${attachments.fileToAttach.getAbsolutePath}")
+    }
+    document.close()
+    finalDocumentBytes.toByteArray
+  }
+
+  def process(parser: ArgtParser) {
+    if (parser.verbose) println(s"Main PDF file:  ${parser.originalPDF.get.getAbsolutePath}")
+
+    val filesToAttach = parser
+      .attachmentFolder
+      .get
+      .listFiles
+      .map(Attachment(_, "Some description here"))
+
+    val output = parser.finalPDF.get
+    val os = new FileOutputStream(output)
+    os.write(createPdf(filesToAttach, "This is a cover page.\n\nTAJ", parser.verbose))
+    os.flush()
+    os.close()
   }
 }
